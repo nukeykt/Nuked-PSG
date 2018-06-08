@@ -16,7 +16,7 @@
 //  Thanks:
 //      Fritzchens Fritz for YM7101 decap and die shot.
 //
-// version: 1.0
+// version: 1.0.1
 //
 
 #include <stdio.h>
@@ -34,7 +34,7 @@ const Bit8u psg_debug_chan[4] = {
 void PSG_Reset(psg_t *chip)
 {
     // TODO: verify
-    chip->latch = 0;
+    chip->latch = 7;
     chip->volume[0] = 0x0f;
     chip->volume[1] = 0x0f;
     chip->volume[2] = 0x0f;
@@ -46,7 +46,7 @@ void PSG_Reset(psg_t *chip)
     chip->freq[0] = 0;
     chip->freq[1] = 0;
     chip->freq[2] = 0;
-    chip->freq[3] = 0;
+    chip->freq[3] = 0x10;
     chip->counter[0] = 0;
     chip->counter[1] = 0;
     chip->counter[2] = 0;

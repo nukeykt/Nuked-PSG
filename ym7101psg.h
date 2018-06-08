@@ -16,7 +16,7 @@
 //  Thanks:
 //      Fritzchens Fritz for YM7101 decap and die shot.
 //
-// version: 1.0
+// version: 1.0.1
 //
 
 #ifndef YM7101PSG_H
