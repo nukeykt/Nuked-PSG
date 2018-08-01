@@ -55,9 +55,11 @@ void PSG_Reset(psg_t *chip)
     chip->noise = 0;
     chip->noise_reset = 0;
     chip->noise_update = 0;
+    chip->noise_type = 0;
     chip->sign = 0;
     chip->inverse = 0x0f;
     chip->cycle = 0;
+    chip->debug = 0;
 }
 
 void PSG_Write(psg_t *chip, Bit8u data)
