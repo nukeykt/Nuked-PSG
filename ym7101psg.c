@@ -132,7 +132,7 @@ void PSG_UpdateSample(psg_t *chip)
 
 Bit16u PSG_Read(psg_t *chip)
 {
-    Bit16u sample;
+    Bit16u sample = 0;
     Bit32u i;
     PSG_UpdateSample(chip);
     for (i = 0; i < 4; i++)
