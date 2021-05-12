@@ -1,6 +1,5 @@
 // Copyright (C) 2021 Nuke.YKT
 // License: GPLv2+
-#include <stdio.h>
 #include <string.h>
 #include "ympsg.h"
 
@@ -311,7 +310,7 @@ float YMPSG_GetOutput(ympsg_t *chip)
     YMPSG_UpdateSample(chip);
     if (chip->test & 1)
     {
-        sample += ympsg_vol[chip->volume[chip->test >> 1]];
+        sample += ympsg_vol[chip->volume_out[chip->test >> 1]];
         sample += ympsg_vol[16] * 3.f;
     }
     else

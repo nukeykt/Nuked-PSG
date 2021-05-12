@@ -4,7 +4,6 @@
 #define _YMPSG_H_
 #include <stdint.h>
 
-#define RSM_FRAC 10
 #define YMPSG_WRITEBUF_SIZE 2048
 #define YMPSG_WRITEBUF_DELAY 8
 
