@@ -4,6 +4,16 @@
 #define _YMPSG_H_
 #include <stdint.h>
 
+#define RSM_FRAC 10
+#define YMPSG_WRITEBUF_SIZE 2048
+#define YMPSG_WRITEBUF_DELAY 8
+
+typedef struct _ympsg_writebuf {
+    uint64_t time;
+    uint8_t stat;
+    uint8_t data;
+} ympsg_writebuf;
+
 typedef struct {
     // IO
     uint8_t data;
@@ -38,6 +48,26 @@ typedef struct {
     uint16_t noise;
     uint8_t test;
     uint8_t volume_out[4];
+
+    //
+    uint64_t writebuf_samplecnt;
+    uint32_t writebuf_cur;
+    uint32_t writebuf_last;
+    uint64_t writebuf_lasttime;
+    ympsg_writebuf writebuf[YMPSG_WRITEBUF_SIZE];
 } ympsg_t;
+
+
+void YMPSG_Write(ympsg_t *chip, uint8_t data);
+uint16_t YMPSG_Read(ympsg_t *chip);
+void YMPSG_Init(ympsg_t *chip);
+void YMPSG_SetIC(ympsg_t *chip, uint32_t ic);
+void YMPSG_Clock(ympsg_t *chip);
+float YMPSG_GetOutput(ympsg_t *chip);
+void YMPSG_Test(ympsg_t *chip, uint16_t test);
+
+
+void YMPSG_Generate(ympsg_t *chip, int32_t *buf);
+void YMPSG_WriteBuffered(ympsg_t *chip, uint8_t data);
 
 #endif

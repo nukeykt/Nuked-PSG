@@ -328,3 +328,62 @@ void YMPSG_Test(ympsg_t *chip, uint16_t test)
 {
     chip->test = (test >> 9) & 7;
 }
+
+
+void YMPSG_Generate(ympsg_t *chip, int32_t *buf)
+{
+    uint32_t i;
+    float out;
+
+    for (i = 0; i < 16; i++)
+    {
+        YMPSG_Clock(chip);
+
+        while (chip->writebuf[chip->writebuf_cur].time <= chip->writebuf_samplecnt)
+        {
+            if (!chip->writebuf[chip->writebuf_cur].stat)
+            {
+                break;
+            }
+            chip->writebuf[chip->writebuf_cur].stat = 0;
+            YMPSG_Write(chip, chip->writebuf[chip->writebuf_cur].data);
+            chip->writebuf_cur = (chip->writebuf_cur + 1) % YMPSG_WRITEBUF_SIZE;
+        }
+        chip->writebuf_samplecnt++;
+    }
+    out = YMPSG_GetOutput(chip);
+    *buf = (int32_t)(out * 8192.f);
+}
+
+void YMPSG_WriteBuffered(ympsg_t *chip, uint8_t data)
+{
+    uint64_t time1, time2;
+    uint64_t skip;
+
+    if (chip->writebuf[chip->writebuf_last].stat)
+    {
+        YMPSG_Write(chip, chip->writebuf[chip->writebuf_last].data);
+
+        chip->writebuf_cur = (chip->writebuf_last + 1) % YMPSG_WRITEBUF_SIZE;
+        skip = chip->writebuf[chip->writebuf_last].time - chip->writebuf_samplecnt;
+        chip->writebuf_samplecnt = chip->writebuf[chip->writebuf_last].time;
+        while (skip--)
+        {
+            YMPSG_Clock(chip);
+        }
+    }
+
+    chip->writebuf[chip->writebuf_last].stat = 1;
+    chip->writebuf[chip->writebuf_last].data = data;
+    time1 = chip->writebuf_lasttime + YMPSG_WRITEBUF_DELAY;
+    time2 = chip->writebuf_samplecnt;
+
+    if (time1 < time2)
+    {
+        time1 = time2;
+    }
+
+    chip->writebuf[chip->writebuf_last].time = time1;
+    chip->writebuf_lasttime = time1;
+    chip->writebuf_last = (chip->writebuf_last + 1) % YMPSG_WRITEBUF_SIZE;
+}
