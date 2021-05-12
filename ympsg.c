@@ -4,6 +4,10 @@
 #include <string.h>
 #include "ympsg.h"
 
+const float ympsg_vol[17] = {
+    1.0, 0.772, 0.622, 0.485, 0.382, 0.29, 0.229, 0.174, 0.132, 0.096, 0.072, 0.051, 0.034, 0.019, 0.009, 0.0, -1.059
+};
+
 static void YMPSG_WriteLatch(ympsg_t *chip)
 {
     uint8_t data = chip->data;
@@ -106,6 +110,29 @@ static void YMPSG_ClockInternal1(ympsg_t *chip)
 {
     uint16_t freq = 0;
     uint8_t chan_sel = chip->chan_sel;
+    uint8_t noise_of, noise_bit1, noise_bit2, noise_next;
+    if ((chip->noise_data & 3) == 3)
+    {
+        noise_of = (chip->sign >> 1) & 1;
+    }
+    else
+    {
+        noise_of = chip->sign & 1;
+    }
+    if (chip->noise_trig_l || (chip->ic_latch2 & 1))
+    {
+        chip->noise = 0;
+    }
+    else if (noise_of && !chip->noise_of)
+    {
+        noise_bit1 = (chip->noise >> 15) & 1;
+        noise_bit2 = (chip->noise >> 12) & 1;
+        noise_bit1 ^= noise_bit2;
+        noise_next = ((noise_bit1 && ((chip->noise_data >> 2) & 1)) || ((chip->noise & 32767) == 0));
+        chip->noise <<= 1;
+        chip->noise |= noise_next;
+    }
+    chip->noise_of = noise_of;
     if (chip->ic_latch2 & 2)
     {
         chan_sel = 0;
@@ -121,6 +148,21 @@ static void YMPSG_ClockInternal1(ympsg_t *chip)
     if (chip->chan_sel & 4)
     {
         freq |= chip->freq[2];
+    }
+    if (chip->chan_sel & 8)
+    {
+        if ((chip->noise_data & 3) == 0)
+        {
+            freq |= 16;
+        }
+        if ((chip->noise_data & 3) == 1)
+        {
+            freq |= 32;
+        }
+        if ((chip->noise_data & 3) == 2)
+        {
+            freq |= 64;
+        }
     }
     if (chip->chan_sel & 1)
     {
@@ -167,6 +209,30 @@ static void YMPSG_ClockInternal2(ympsg_t *chip)
     YMPSG_UpdateRegisters(chip);
 
     chip->rot = (chip->rot + 1) & 3;
+    chip->sign_l = chip->sign;
+    chip->noise_sign_l = (chip->noise >> 14) & 1;
+}
+
+static void YMPSG_UpdateSample(ympsg_t *chip)
+{
+    uint32_t i;
+    uint8_t sign = chip->sign & 14;
+    sign |= chip->noise_sign_l;
+    if (chip->test & 1)
+    {
+        sign |= 15;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if ((sign >> (3 - i)) & 1)
+        {
+            chip->volume_out[i] = chip->volume[i];
+        }
+        else
+        {
+            chip->volume_out[i] = 15;
+        }
+    }
 }
 
 void YMPSG_Write(ympsg_t *chip, uint8_t data)
@@ -175,11 +241,16 @@ void YMPSG_Write(ympsg_t *chip, uint8_t data)
     chip->write_flag = 1;
 }
 
-void YMPSG_WriteImmediate(ympsg_t *chip, uint8_t data)
+uint16_t YMPSG_Read(ympsg_t *chip)
 {
-    // TODO
-    //chip->data = data;
-    //YMPSG_WriteInternal(chip);
+    uint16_t data = 0;
+    uint32_t i;
+    YMPSG_UpdateSample(chip);
+    for (i = 0; i < 4; i++)
+    {
+        data |= chip->volume_out[i] << ((3 - i) * 4);
+    }
+    return data;
 }
 
 void YMPSG_Init(ympsg_t *chip)
@@ -236,11 +307,24 @@ void YMPSG_Clock(ympsg_t *chip)
 
 float YMPSG_GetOutput(ympsg_t *chip)
 {
-    return 0.f;
+    float sample = 0.f;
+    YMPSG_UpdateSample(chip);
+    if (chip->test & 1)
+    {
+        sample += ympsg_vol[chip->volume[chip->test >> 1]];
+        sample += ympsg_vol[16] * 3.f;
+    }
+    else
+    {
+        sample += ympsg_vol[chip->volume_out[0]];
+        sample += ympsg_vol[chip->volume_out[1]];
+        sample += ympsg_vol[chip->volume_out[2]];
+        sample += ympsg_vol[chip->volume_out[3]];
+    }
+    return sample;
 }
 
-void YMPSG_ClockFast(ympsg_t *chip)
+void YMPSG_Test(ympsg_t *chip, uint16_t test)
 {
-    // TODO
+    chip->test = (test >> 9) & 7;
 }
-

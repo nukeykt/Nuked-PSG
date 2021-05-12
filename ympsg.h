@@ -23,6 +23,7 @@ typedef struct {
     uint8_t volume[4];
     uint16_t freq[3];
     uint8_t noise_data;
+    uint8_t noise_of;
     uint8_t noise_trig;
     uint8_t noise_trig_l;
     uint8_t rot;
@@ -32,6 +33,11 @@ typedef struct {
     uint16_t counter[4];
     uint8_t counter_of;
     uint8_t sign;
+    uint8_t sign_l;
+    uint8_t noise_sign_l;
+    uint16_t noise;
+    uint8_t test;
+    uint8_t volume_out[4];
 } ympsg_t;
 
 #endif
