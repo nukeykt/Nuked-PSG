@@ -327,7 +327,7 @@ float YMPSG_GetOutput(ympsg_t *chip)
         for (i = 0; i < 4; i++)
         {
             if (!((chip->mute>>i) & 1))
-                sample += ympsg_vol[chip->volume_out[0]];
+                sample += ympsg_vol[chip->volume_out[i]];
         }
     }
     return sample;
