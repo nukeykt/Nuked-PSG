@@ -1,5 +1,6 @@
 // Copyright (C) 2021 Nuke.YKT
 // License: GPLv2+
+// Version 1.0.1
 #include <string.h>
 #include "ympsg.h"
 
@@ -307,18 +308,27 @@ void YMPSG_Clock(ympsg_t *chip)
 float YMPSG_GetOutput(ympsg_t *chip)
 {
     float sample = 0.f;
+    uint32_t i;
     YMPSG_UpdateSample(chip);
     if (chip->test & 1)
     {
         sample += ympsg_vol[chip->volume_out[chip->test >> 1]];
         sample += ympsg_vol[16] * 3.f;
     }
-    else
+    else if (!chip->mute)
     {
         sample += ympsg_vol[chip->volume_out[0]];
         sample += ympsg_vol[chip->volume_out[1]];
         sample += ympsg_vol[chip->volume_out[2]];
         sample += ympsg_vol[chip->volume_out[3]];
+    }
+    else
+    {
+        for (i = 0; i < 4; i++)
+        {
+            if (!((chip->mute>>i) & 1))
+                sample += ympsg_vol[chip->volume_out[0]];
+        }
     }
     return sample;
 }
@@ -385,4 +395,9 @@ void YMPSG_WriteBuffered(ympsg_t *chip, uint8_t data)
     chip->writebuf[chip->writebuf_last].time = time1;
     chip->writebuf_lasttime = time1;
     chip->writebuf_last = (chip->writebuf_last + 1) % YMPSG_WRITEBUF_SIZE;
+}
+
+void YMPSG_SetMute(ympsg_t *chip, uint8_t mute)
+{
+    chip->mute = mute;
 }

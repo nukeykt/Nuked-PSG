@@ -1,5 +1,6 @@
 // Copyright (C) 2021 Nuke.YKT
 // License: GPLv2+
+// Version 1.0.1
 #ifndef _YMPSG_H_
 #define _YMPSG_H_
 #include <stdint.h>
@@ -54,6 +55,8 @@ typedef struct {
     uint32_t writebuf_last;
     uint64_t writebuf_lasttime;
     ympsg_writebuf writebuf[YMPSG_WRITEBUF_SIZE];
+
+    uint8_t mute;
 } ympsg_t;
 
 
@@ -68,5 +71,7 @@ void YMPSG_Test(ympsg_t *chip, uint16_t test);
 
 void YMPSG_Generate(ympsg_t *chip, int32_t *buf);
 void YMPSG_WriteBuffered(ympsg_t *chip, uint8_t data);
+
+void YMPSG_SetMute(ympsg_t *chip, uint8_t mute);
 
 #endif
